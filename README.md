@@ -62,20 +62,21 @@ GEMINI_API_KEY=your_api_key_here
 
 ## Hướng dẫn sử dụng
 
-### 1. Xây dựng Cơ sở dữ liệu Vector ChromaDB
+### 1. Xây dựng cơ sở dữ liệu Vector ChromaDB
 Chạy 1 lần các lệnh sau để đọc dữ liệu từ `data/chunks/` và nhúng vào `data/vectorstore/`:
 ```bash
 python src/embedding/build_kb.py
 python src/embedding/build_source.py
 ```
 
-### 2. Khởi chạy Web Server
+### 2. Khởi chạy ChatBot
+Cách 1:
 ```bash
 python app/app.py
 ```
 Truy cập: `http://127.0.0.1:5000` trên trình duyệt để sử dụng chatbot.
 
-### 3. Sử dụng trực tiếp trên Terminal (Cách 2)
+Cách 2:
 ```bash
 python src/generation/chatbot.py
 ```
