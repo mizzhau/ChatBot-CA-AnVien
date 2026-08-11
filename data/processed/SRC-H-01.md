@@ -1,0 +1,13 @@
+# Bộ Công an - Cảnh báo phương thức, thủ đoạn lừa đảo trên mạng xã hội
+## Nội dung
+
+Tuyên truyền phương thức, thủ đoạn lừa đảo mới trên mạng xã hội tại địa điểm tiếp công dân của Công an tỉnh
+Thời gian gần đây, các hình thức lừa đảo trên không gian mạng tiếp tục diễn biến phức tạp, trong đó nổi lên thủ đoạn lợi dụng việc xác thực thuê bao di động và tính năng chuyển tiếp cuộc gọi để chiếm đoạt tài sản. Tại Quảng Ninh và nhiều địa phương, đã ghi nhận nhiều trường hợp người dân bị mất tiền trong tài khoản ngân hàng, ví điện tử chỉ trong thời gian ngắn.
+
+Để thông tin và hỗ trợ người dân khi đến trụ sở Công an tỉnh Quảng Ninh tố giác tội phạm, Thanh tra Công an tỉnh đã tích cực tuyên truyền trực tiếp về phương thức, thủ đoạn hoạt động, chiêu trò lừa đảo của các đối tượng tại địa điểm tiếp công dân Công an tỉnh trong quá trình tiếp xúc, làm việc với người dân; hướng dẫn người dân tuyệt đối không cung cấp thông tin cá nhân, mã OTP, mật khẩu tài khoản cho bất kỳ ai; không truy cập đường link lạ, không cài đặt ứng dụng ngoài nguồn chính thống; đặc biệt không thực hiện các thao tác theo hướng dẫn của người lạ như chuyển tiếp cuộc gọi, cấp quyền truy cập thiết bị hoặc chia sẻ màn hình.
+
+Việc xác thực thuê bao chỉ thực hiện qua các kênh chính thức như VNeID, ứng dụng của nhà mạng hoặc tại điểm giao dịch. Khi phát hiện dấu hiệu nghi vấn hoặc đã lỡ cung cấp thông tin, người dân cần nhanh chóng liên hệ ngân hàng, nhà mạng để khóa tài khoản, đồng thời trình báo cơ quan Công an nơi gần nhất để được hỗ trợ kịp thời. Nội dung, hình thức tuyên truyền trực tiếp, linh hoạt giúp người dân dễ dàng tiếp cận thông tin, phòng ngừa cho bản thân và người thân.
+
+Theo quy định tại Thông tư số 08/2026/TT-BKHCN (có hiệu lực từ 15/4/2026), việc xác thực thuê bao di động được thực hiện qua ứng dụng VNeID, ứng dụng chính thức của doanh nghiệp viễn thông hoặc tại điểm giao dịch. Tuy nhiên, lợi dụng việc nhiều người dân chưa nắm rõ quy trình, các đối tượng đã giả danh nhân viên nhà mạng, cơ quan chức năng gọi điện, nhắn tin yêu cầu cung cấp thông tin cá nhân, mã OTP hoặc truy cập đường link giả mạo để “chuẩn hóa thuê bao”.
+
+Đáng chú ý, một thủ đoạn mới được ghi nhận là lợi dụng tính năng chuyển tiếp cuộc gọi (Call Forwarding). Các đối tượng giả danh nhân viên kỹ thuật, hướng dẫn người dùng thao tác cài đặt chuyển tiếp cuộc gọi bằng các cú pháp lạ với lý do “hỗ trợ kỹ thuật” hoặc “bảo mật tài khoản”. Thực chất, hành vi này nhằm chuyển toàn bộ cuộc gọi, trong đó có các cuộc gọi chứa mã OTP từ ngân hàng hoặc ứng dụng thanh toán, về số điện thoại của đối tượng. Khi đã chiếm được mã xác thực, chúng dễ dàng đăng nhập, chiếm quyền kiểm soát tài khoản và thực hiện các giao dịch chuyển tiền, rút tiền hoặc thanh toán trực tuyến để chiếm đoạt tài sản.
