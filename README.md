@@ -1,4 +1,6 @@
 # 🛡️ Chatbot RAG — Trợ Lý Ảo Thông Tin Hành Chính & ANTT Công An Phường / Xã
+<img width="752" height="826" alt="image" src="https://github.com/user-attachments/assets/7f4b57f0-cdec-4e1f-853c-eb0d6e589d45" />
+<img width="755" height="825" alt="image" src="https://github.com/user-attachments/assets/f52e8b1c-5336-4ea9-9ce3-3909c119cd89" />
 
 Hệ thống Hỏi đáp (Chatbot) thông minh hỗ trợ tư vấn thủ tục hành chính, an ninh trật tự, phòng cháy chữa cháy và thông tin liên hệ cho **Công an phường / xã** (được tối ưu hóa dữ liệu thực tế cho địa bàn **Công an xã An Viễn**).
 
@@ -37,45 +39,6 @@ Hệ thống Hỏi đáp (Chatbot) thông minh hỗ trợ tư vấn thủ tục 
    - **Lịch tiếp dân:** Mô hình “Buổi sáng với Nhân dân” (sáng T2 - T6); Trưởng Công an xã tiếp dân vào 08h00 thứ 5 hằng tuần.
    - **Danh bạ 16 cán bộ Ban chỉ huy, Cảnh sát khu vực (ấp An Phú, Phát Đạt, Hưng Thịnh) & Cán bộ phụ trách từng mảng.**
    - **Tuyển chọn nghĩa vụ tham gia CAND & Tuyển sinh các trường CAND (Văn bằng 2, Đại học chính quy).**
-
----
-
-## 🗂️ Cấu trúc thư mục
-
-```
-├── app/
-│   ├── static/
-│   │   └── images/
-│   │       └── QR-dich-vu-cong.png   # Ảnh mã QR Cổng Dịch vụ công
-│   ├── templates/
-│   │   └── index.html               # Giao diện Chatbot web thời gian thực
-│   └── app.py                       # Server Flask + Server-Sent Events (SSE)
-├── data/
-│   └── vectorstore/                 # CSDL Vector ChromaDB
-├── src/
-│   ├── chunking/
-│   │   ├── chunker.py               # Chia nhỏ tài liệu luật và quy chuẩn
-│   │   └── update_an_vien_kb.py     # Cập nhật dữ liệu tri thức Công an xã An Viễn
-│   ├── embedding/
-│   │   ├── embedder.py              # Load mô hình Sentence-Transformers tiếng Việt
-│   │   ├── build_kb.py              # Nhúng tập tri thức kb_chunks vào ChromaDB
-│   │   └── build_source.py          # Nhúng văn bản luật source_chunks vào ChromaDB
-│   ├── generation/
-│   │   ├── .env                     # File cấu hình GEMINI_API_KEY
-│   │   ├── system_prompt.md         # Quy tắc & hướng dẫn trả lời của Chatbot
-│   │   └── chatbot.py               # Logic gọi Google Gemini API + xử lý ngữ cảnh RAG
-│   ├── ingestion/
-│   │   ├── converter.py             # Chuyển đổi .docx/.doc/.pdf sang Markdown
-│   │   ├── ocr_processor.py         # Xử lý PDF scan bằng PyMuPDF & Tesseract OCR
-│   │   ├── source_mapping.py        # Mapping metadata danh mục tài liệu
-│   │   └── run_ingestion.py         # Pipeline nạp dữ liệu đầu vào
-│   ├── retrieval/
-│   │   └── query.py                 # Thuật toán tìm kiếm & phân loại kết quả RAG
-├── requirements.txt                 # Danh sách thư viện phụ thuộc
-├── run_pipeline.py                  # Script chạy toàn bộ pipeline tự động
-├── .gitignore                       # Cấu hình bỏ qua tài liệu thô & chỉ giữ vectorstore
-└── README.md
-```
 
 ---
 
