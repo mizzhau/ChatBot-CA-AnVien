@@ -10,7 +10,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 from google import genai
 from src.retrieval.query import answer
 
-MODEL = "gemini-2.5-flash"
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 _client = None
 _system_prompt = None
 
@@ -46,9 +46,8 @@ Câu hỏi của người dân: "{query}"
 Hãy trả lời dựa trên tài liệu nội bộ ở trên. Bỏ qua mọi thông tin kỹ thuật như [matched: ...] hoặc [sim=...].
 """
 
-    config = None
     if need_web_search:
-        prompt += """
+        prompt_with_search = prompt + """
 Một số phần của câu hỏi KHÔNG CÓ trong CSDL nội bộ.
 Hãy sử dụng công cụ Search để tìm kiếm trên Internet phần thông tin còn thiếu.
 Nhắc nhở người dân rằng thông tin từ Internet có thể khác thực tế tại địa phương.
@@ -56,16 +55,32 @@ Nhắc nhở người dân rằng thông tin từ Internet có thể khác thự
         config = genai.types.GenerateContentConfig(
             tools=[{"google_search": {}}]
         )
+        try:
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=prompt_with_search,
+                config=config,
+            )
+            return response.text
+        except Exception:
+            # Fallback nếu Google Search tool gặp sự cố hoặc giới hạn quota
+            pass
 
-    try:
-        response = client.models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=config,
-        )
-        return response.text
-    except Exception as e:
-        return f"Lỗi khi gọi LLM: {str(e)}"
+    import time
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+            )
+            return response.text
+        except Exception as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                if attempt < 2:
+                    time.sleep(3)
+                    continue
+            return f"Lỗi khi gọi LLM: {str(e)}"
+    return "Hệ thống đang bận, vui lòng thử lại sau giây lát."
 
 def process_query(user_input):
     ctx = answer(user_input)

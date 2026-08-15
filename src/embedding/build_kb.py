@@ -1,7 +1,10 @@
 import json
 from pathlib import Path
 import chromadb
-from embedder import embed_texts
+try:
+    from src.embedding.embedder import embed_texts
+except ImportError:
+    from embedder import embed_texts
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data" / "chunks"
 DB_DIR = Path(__file__).parent.parent.parent / "data" / "vectorstore"
@@ -28,15 +31,12 @@ def flatten_metadata(chunk: dict) -> dict:
 
 def main():
     chunks = load_kb_chunks()
-    client = chromadb.PersistentClient(path=str(DB_DIR))
-    try:
-        client.delete_collection("kb_chunks")
-    except Exception:
-        pass
-    collection = client.create_collection(
-        name="kb_chunks",
-        metadata={"hnsw:space": "cosine"},
-    )
+
+    # Deduplicate chunks by chunk_id
+    unique_chunks = {}
+    for chunk in chunks:
+        unique_chunks[chunk.get("chunk_id", "")] = chunk
+    chunks = list(unique_chunks.values())
 
     ids, documents, metadatas = [], [], []
     for chunk in chunks:
@@ -50,7 +50,19 @@ def main():
             documents.append(variant)
             metadatas.append(meta)
 
+    print(f"Embedding {len(documents)} KB question variants...")
     embeddings = embed_texts(documents)
+
+    print("Saving KB embeddings to ChromaDB...")
+    client = chromadb.PersistentClient(path=str(DB_DIR))
+    try:
+        client.delete_collection("kb_chunks")
+    except Exception:
+        pass
+    collection = client.get_or_create_collection(
+        name="kb_chunks",
+        metadata={"hnsw:space": "cosine"},
+    )
 
     BATCH = 500
     for i in range(0, len(ids), BATCH):
@@ -60,6 +72,7 @@ def main():
             embeddings=embeddings[i:i + BATCH],
             metadatas=metadatas[i:i + BATCH],
         )
+    print("Done building kb_chunks vector store.")
 
 if __name__ == "__main__":
     main()

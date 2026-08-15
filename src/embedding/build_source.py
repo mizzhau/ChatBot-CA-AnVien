@@ -1,7 +1,10 @@
 import json
 from pathlib import Path
 import chromadb
-from embedder import embed_texts
+try:
+    from src.embedding.embedder import embed_texts
+except ImportError:
+    from embedder import embed_texts
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data" / "chunks"
 DB_DIR = Path(__file__).parent.parent.parent / "data" / "vectorstore"
@@ -17,15 +20,12 @@ def load_sources():
 
 def main():
     rows = load_sources()
-    client = chromadb.PersistentClient(path=str(DB_DIR))
-    try:
-        client.delete_collection("source_chunks")
-    except Exception:
-        pass
-    collection = client.create_collection(
-        name="source_chunks",
-        metadata={"hnsw:space": "cosine"},
-    )
+    
+    # Deduplicate rows by chunk_id
+    unique_rows = {}
+    for row in rows:
+        unique_rows[row.get("chunk_id", "")] = row
+    rows = list(unique_rows.values())
 
     ids, documents, metadatas = [], [], []
     for row in rows:
@@ -49,10 +49,23 @@ def main():
             "name": row.get("source_title", ""),
             "url": row.get("source_url", ""),
             "content_type": row.get("content_type", ""),
+            "doc_quality": row.get("doc_quality", "text"),
             "text": content,
         })
 
+    print(f"Embedding {len(documents)} source chunks...")
     embeddings = embed_texts(documents)
+
+    print("Saving embeddings to ChromaDB...")
+    client = chromadb.PersistentClient(path=str(DB_DIR))
+    try:
+        client.delete_collection("source_chunks")
+    except Exception:
+        pass
+    collection = client.get_or_create_collection(
+        name="source_chunks",
+        metadata={"hnsw:space": "cosine"},
+    )
 
     BATCH = 500
     for i in range(0, len(ids), BATCH):
@@ -62,6 +75,7 @@ def main():
             embeddings=embeddings[i:i + BATCH],
             metadatas=metadatas[i:i + BATCH],
         )
+    print("Done building source_chunks vector store.")
 
 if __name__ == "__main__":
     main()

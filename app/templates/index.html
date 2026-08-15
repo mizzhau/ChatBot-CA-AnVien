@@ -194,7 +194,7 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            HỆ THỐNG HỖ TRỢ THỦ TỤC HÀNH CHÍNH
+            HỆ THỐNG HỖ TRỢ THỦ TỤC CÔNG AN XÃ AN VIÊN
         </div>
         <div class="chat-messages" id="chat-messages">
             <div class="message bot">
@@ -211,6 +211,11 @@
         function formatMarkdown(text) {
             let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Image Markdown: ![alt](url)
+            html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:8px; margin-top:10px; display:block;">');
+            // Link Markdown: [text](url) - using negative lookbehind to avoid replacing images
+            html = html.replace(/(?<!\!)\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: underline; font-weight: 500;">$1</a>');
 
             const lines = html.split('\n');
             let inList = false;

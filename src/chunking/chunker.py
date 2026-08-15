@@ -91,7 +91,7 @@ def split_appendix(content: str):
     return content, None
 
 
-def chunk_law_article(content, source_id, source_title, source_url):
+def chunk_law_article(content, source_id, source_title, source_url, doc_quality="text"):
     main_body, appendix_text = split_appendix(content)
     chuong_map = build_chuong_map(main_body)
 
@@ -124,6 +124,7 @@ def chunk_law_article(content, source_id, source_title, source_url):
             "section_title": None,
             "content": body,
             "source_url": source_url,
+            "doc_quality": doc_quality,
         })
 
     if appendix_text:
@@ -146,12 +147,13 @@ def chunk_law_article(content, source_id, source_title, source_url):
                 "section_title": section_t,
                 "content": part,
                 "source_url": source_url,
+                "doc_quality": doc_quality,
             })
 
     return chunks
 
 
-def chunk_guide_section(content, source_id, source_title, source_url):
+def chunk_guide_section(content, source_id, source_title, source_url, doc_quality="text"):
     chunks = []
     section_matches = list(RE_SECTION.finditer(content))
 
@@ -168,6 +170,7 @@ def chunk_guide_section(content, source_id, source_title, source_url):
             "section_title": section_title,
             "content": clean_content(body),
             "source_url": source_url,
+            "doc_quality": doc_quality,
         }
 
     if not section_matches:
@@ -195,7 +198,7 @@ def chunk_guide_section(content, source_id, source_title, source_url):
     return chunks
 
 
-def chunk_portal_reference(content, source_id, source_title, source_url):
+def chunk_portal_reference(content, source_id, source_title, source_url, doc_quality="text"):
     return [{
         "chunk_id": f"{source_id}_REF",
         "source_id": source_id,
@@ -208,6 +211,7 @@ def chunk_portal_reference(content, source_id, source_title, source_url):
         "section_title": None,
         "content": clean_content(content),
         "source_url": source_url,
+        "doc_quality": doc_quality,
     }]
 
 
@@ -221,24 +225,27 @@ def process_file(md_path: Path, registry: dict) -> list:
     reg = registry[source_id]
     source_url = reg.get("url") or ""
     registry_title = reg.get("title", source_id)
+    doc_quality = reg.get("doc_quality", "text")
 
     content = md_path.read_text(encoding="utf-8")
+    # Bỏ qua comment metadata HTML nếu có (từ converter)
+    content = re.sub(r"^<!--.*?-->\s*", "", content, flags=re.DOTALL)
     source_title = extract_doc_title(content, registry_title)
     ctype = detect_content_type(content, source_id)
 
     if ctype == "law_article":
-        return chunk_law_article(content, source_id, source_title, source_url)
+        return chunk_law_article(content, source_id, source_title, source_url, doc_quality)
     elif ctype == "guide_section":
-        return chunk_guide_section(content, source_id, source_title, source_url)
+        return chunk_guide_section(content, source_id, source_title, source_url, doc_quality)
     else:
-        return chunk_portal_reference(content, source_id, source_title, source_url)
+        return chunk_portal_reference(content, source_id, source_title, source_url, doc_quality)
 
 
 def validate_chunk(chunk: dict) -> list:
     required_fields = [
         "chunk_id", "source_id", "content_type", "source_title",
         "chuong", "chuong_title", "dieu", "dieu_title",
-        "section_title", "content", "source_url",
+        "section_title", "content", "source_url", "doc_quality",
     ]
     errors = []
     for field in required_fields:

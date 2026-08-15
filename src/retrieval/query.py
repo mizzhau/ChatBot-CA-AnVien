@@ -13,13 +13,24 @@ def _load_source_registry():
 
 _source_registry = _load_source_registry()
 
-def get_website_links(source_ids_str: str) -> str:
-    if not source_ids_str:
+def get_website_links(source_ids_val) -> str:
+    if not source_ids_val:
         return ""
-    try:
-        src_ids = json.loads(source_ids_str) if isinstance(source_ids_str, str) else source_ids_str
-    except (json.JSONDecodeError, TypeError):
-        return ""
+    src_ids = []
+    if isinstance(source_ids_val, list):
+        src_ids = source_ids_val
+    elif isinstance(source_ids_val, str):
+        source_ids_val = source_ids_val.strip()
+        if source_ids_val.startswith("["):
+            try:
+                parsed = json.loads(source_ids_val)
+                if isinstance(parsed, list):
+                    src_ids = parsed
+            except Exception:
+                src_ids = [s.strip() for s in source_ids_val.split("|") if s.strip()]
+        else:
+            src_ids = [s.strip() for s in source_ids_val.split("|") if s.strip()]
+    
     links = []
     for sid in src_ids:
         entry = _source_registry.get(sid)
@@ -33,34 +44,40 @@ SIM_THRESHOLD_KB = 0.45
 SIM_THRESHOLD_SOURCE = 0.20
 
 EMERGENCY_NOTE = (
-    "\n\n Nếu tình huống đang nguy hiểm/khẩn cấp: gọi 113 (an ninh trật tự), "
+    "\n\n🚨 Nếu tình huống đang nguy hiểm/khẩn cấp: gọi 113 (an ninh trật tự), "
     "114 (cháy nổ/cứu nạn cứu hộ), 115 (cấp cứu y tế)."
 )
 
 def is_fallback_chunk(meta: dict) -> bool:
     return meta.get("intent_code", "").endswith("_FALLBACK_LIEN_QUAN")
 
-def search_kb(query: str, top_k: int = 8):
+def search_kb(query: str, top_k: int = 12):
     client = chromadb.PersistentClient(path=str(DB_DIR))
     collection = client.get_collection("kb_chunks")
     q_emb = embed_texts([query])[0]
     res = collection.query(query_embeddings=[q_emb], n_results=top_k)
 
+    if not res or not res.get("documents") or not res["documents"] or not res["documents"][0]:
+        return []
+
     best_by_chunk = {}
     for doc, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
         sim = 1 - dist
-        cid = meta["chunk_id"]
+        cid = meta.get("chunk_id", "")
         if cid not in best_by_chunk or sim > best_by_chunk[cid]["sim"]:
             best_by_chunk[cid] = {"sim": sim, "meta": meta, "matched_variant": doc}
 
     ranked = sorted(best_by_chunk.values(), key=lambda x: x["sim"], reverse=True)
     return ranked
 
-def search_sources(query: str, top_k: int = 5):
+def search_sources(query: str, top_k: int = 8):
     client = chromadb.PersistentClient(path=str(DB_DIR))
     collection = client.get_collection("source_chunks")
     q_emb = embed_texts([query])[0]
     res = collection.query(query_embeddings=[q_emb], n_results=top_k)
+
+    if not res or not res.get("metadatas") or not res["metadatas"] or not res["metadatas"][0]:
+        return []
 
     results = []
     for meta, dist in zip(res["metadatas"][0], res["distances"][0]):
@@ -107,9 +124,15 @@ def answer(query: str) -> str:
     src_results = search_sources(query)
     if src_results and src_results[0]["sim"] >= SIM_THRESHOLD_SOURCE:
         top = src_results[0]["meta"]
+        ocr_warning = ""
+        if top.get("doc_quality") in ("ocr", "mixed"):
+            ocr_warning = (
+                "\n⚠ Lưu ý: Thông tin trích từ tài liệu scan (OCR), "
+                "có thể chưa chính xác 100%.\n"
+            )
         return (
             f"(Không tìm thấy KB_CHUNK khớp tốt — trích từ nguồn gốc để tham khảo, "
-            f"cần cán bộ xác nhận thêm)\n\n"
+            f"cần cán bộ xác nhận thêm)\n{ocr_warning}\n"
             f"{top['heading']}\n{top['text'][:500]}...\n\n"
             f"Nguồn: {top['name']} ({top['url']})"
         )
