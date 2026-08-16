@@ -1,6 +1,6 @@
 # 🛡️ Chatbot RAG — Trợ Lý Ảo Thông Tin Hành Chính & ANTT Công An Phường / Xã
-<img width="752" height="826" alt="image" src="https://github.com/user-attachments/assets/7f4b57f0-cdec-4e1f-853c-eb0d6e589d45" />
-<img width="755" height="825" alt="image" src="https://github.com/user-attachments/assets/f52e8b1c-5336-4ea9-9ce3-3909c119cd89" />
+
+<img width="1237" height="885" alt="image" src="https://github.com/user-attachments/assets/88032836-b8a6-4e2e-97e6-558ffd628656" />
 
 Hệ thống Hỏi đáp (Chatbot) thông minh hỗ trợ tư vấn thủ tục hành chính, an ninh trật tự, phòng cháy chữa cháy và thông tin liên hệ cho **Công an phường / xã** (được tối ưu hóa dữ liệu thực tế cho địa bàn **Công an xã An Viễn**).
 
