@@ -40,7 +40,7 @@ def get_website_links(source_ids_val) -> str:
         return ""
     return "\n🔗 Link website:\n" + "\n".join(links)
 
-SIM_THRESHOLD_KB = 0.45
+SIM_THRESHOLD_KB = 0.35
 SIM_THRESHOLD_SOURCE = 0.20
 
 EMERGENCY_NOTE = (

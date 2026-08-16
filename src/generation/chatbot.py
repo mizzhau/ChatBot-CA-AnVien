@@ -10,7 +10,8 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 from google import genai
 from src.retrieval.query import answer
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+PRIMARY_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+FALLBACK_MODELS = [PRIMARY_MODEL, "gemini-flash-latest", "gemini-3.7-flash"]
 _client = None
 _system_prompt = None
 
@@ -31,19 +32,31 @@ def _get_system_prompt():
             _system_prompt = f.read()
     return _system_prompt
 
-def get_llm_response(query, context, need_web_search=False):
+def get_llm_response(query, context, need_web_search=False, history=None):
     client = _get_client()
     system_prompt = _get_system_prompt()
 
-    prompt = f"""{system_prompt}
+    history_str = ""
+    if history:
+        history_lines = []
+        for msg in history:
+            role_name = "Người dân" if msg.get("role") == "user" else "Chatbot"
+            history_lines.append(f"{role_name}: {msg.get('text', '')}")
+        if history_lines:
+            history_str = "\n=== LỊCH SỬ HỘI THOẠI TRƯỚC ĐÓ ===\n" + "\n".join(history_lines) + "\n=================================\n"
 
+    prompt = f"""{system_prompt}
+{history_str}
 === TÀI LIỆU THAM KHẢO TỪ CSDL NỘI BỘ ===
 {context}
 =====================================
 
-Câu hỏi của người dân: "{query}"
+Câu hỏi hiện tại của người dân: "{query}"
 
-Hãy trả lời dựa trên tài liệu nội bộ ở trên. Bỏ qua mọi thông tin kỹ thuật như [matched: ...] hoặc [sim=...].
+LƯU Ý BẮT BUỘC KHI TRẢ LỜI:
+- Bạn là Trợ lý Pháp lý của Công an xã An Viễn. Hãy xưng hô lịch sự, thân thiện (Công an xã An Viễn / Tôi và Anh/chị).
+- Trả lời dựa trên tài liệu tham khảo ở trên.
+- TUYỆT ĐỐI KHÔNG xuất ra các nhãn kỹ thuật thô như 'CLARIFYING_QUESTION_IF_MISSING:', 'HANDOFF_OR_EMERGENCY_RULE:', 'GUARDRAIL:', 'REQUIRED_ENTITIES:', '[matched: ...]'. Hãy diễn đạt nội dung một cách tự nhiên, mạch lạc, dễ hiểu.
 """
 
     if need_web_search:
@@ -55,32 +68,38 @@ Nhắc nhở người dân rằng thông tin từ Internet có thể khác thự
         config = genai.types.GenerateContentConfig(
             tools=[{"google_search": {}}]
         )
-        try:
-            response = client.models.generate_content(
-                model=MODEL,
-                contents=prompt_with_search,
-                config=config,
-            )
-            return response.text
-        except Exception:
-            # Fallback nếu Google Search tool gặp sự cố hoặc giới hạn quota
-            pass
+        for model_name in FALLBACK_MODELS:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_with_search,
+                    config=config,
+                )
+                if response and response.text:
+                    return response.text
+            except Exception:
+                # Fallback sang model khác hoặc chế độ prompt thường
+                continue
 
     import time
-    for attempt in range(3):
-        try:
-            response = client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-            )
-            return response.text
-        except Exception as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                if attempt < 2:
-                    time.sleep(3)
+    last_err = ""
+    for model_name in FALLBACK_MODELS:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                last_err = str(e)
+                if any(k in last_err for k in ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"]):
+                    time.sleep(1.5 * (attempt + 1))
                     continue
-            return f"Lỗi khi gọi LLM: {str(e)}"
-    return "Hệ thống đang bận, vui lòng thử lại sau giây lát."
+                break  # thử model tiếp theo nếu lỗi không thể retry
+
+    return f"Hệ thống đang bảo trì hoặc quá tải tạm thời (503/429), vui lòng thử lại sau giây lát. ({last_err[:100]})"
 
 def process_query(user_input):
     ctx = answer(user_input)
