@@ -1,13 +1,3 @@
----
-title: Chatbot Công An Xã An Viễn
-emoji: 🛡️
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # 🛡️ Chatbot RAG — Trợ Lý Ảo Thông Tin Hành Chính & ANTT Công An Phường / Xã
 
 <img width="1237" height="885" alt="image" src="https://github.com/user-attachments/assets/88032836-b8a6-4e2e-97e6-558ffd628656" />
