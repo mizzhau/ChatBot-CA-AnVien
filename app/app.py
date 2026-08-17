@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, Response, jsonify
 import json
 import sys
 import os
+import time
+from collections import defaultdict
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -10,6 +12,22 @@ from src.generation.session_manager import session_manager
 from src.retrieval.query import answer
 
 app = Flask(__name__)
+
+# ========================
+# RATE LIMITER (key mặc định)
+# ========================
+_RATE_LIMIT_REQUESTS = 5   # request tối đa
+_RATE_LIMIT_WINDOW  = 60   # trong 60 giây
+_rate_log = defaultdict(list)
+
+def _is_rate_limited(ip: str) -> bool:
+    """Trả về True nếu IP này đã vượt rate limit (chỉ áp dụng khi dùng key mặc định)."""
+    now = time.time()
+    _rate_log[ip] = [t for t in _rate_log[ip] if now - t < _RATE_LIMIT_WINDOW]
+    if len(_rate_log[ip]) >= _RATE_LIMIT_REQUESTS:
+        return True
+    _rate_log[ip].append(now)
+    return False
 
 @app.route("/")
 def index():
@@ -20,18 +38,34 @@ def chat():
     data = request.json or {}
     user_input = data.get("message", "").strip()
     session_id = data.get("session_id", "default_session")
+    user_api_key = data.get("api_key", "").strip()  # Key do người dùng cung cấp
 
     if not user_input:
         return Response("data: {}\n\n", mimetype="text/event-stream")
 
+    # --- Rate limiting: chỉ áp dụng khi dùng key mặc định ---
+    if not user_api_key:
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
+        if _is_rate_limited(client_ip):
+            def rate_limited_response():
+                event_data = {
+                    "status": "rate_limited",
+                    "message": (
+                        "Hệ thống đang quá tải, vui lòng chờ 1 phút rồi thử lại. "
+                        "Hoặc nhập API Key riêng của anh/chị để tiếp tục ngay."
+                    ),
+                    "is_final": True,
+                    "show_api_key_prompt": True
+                }
+                yield f"data: {json.dumps(event_data, ensure_ascii=False)}\n\n"
+            return Response(rate_limited_response(), mimetype="text/event-stream")
+
     def generate():
-        def send_event(status, message, is_final=False):
-            event_data = {
-                "status": status,
-                "message": message,
-                "is_final": is_final
-            }
-            return f"data: {json.dumps(event_data)}\n\n"
+        def send_event(status, message, is_final=False, extra=None):
+            event_data = {"status": status, "message": message, "is_final": is_final}
+            if extra:
+                event_data.update(extra)
+            return f"data: {json.dumps(event_data, ensure_ascii=False)}\n\n"
 
         yield send_event("searching", "Đang tra cứu CSDL nội bộ...")
         ctx = answer(user_input)
@@ -49,12 +83,13 @@ def chat():
         # Lưu câu hỏi của người dùng vào session
         session_manager.add_message(session_id, "user", user_input)
 
-        # Gọi LLM sinh phản hồi với ngữ cảnh đa lượt
+        # Gọi LLM — dùng key của user nếu có, ngược lại dùng key mặc định
         llm_reply = get_llm_response(
             query=user_input,
             context=ctx,
             need_web_search=need_web_search,
-            history=history
+            history=history,
+            api_key_override=user_api_key or None
         )
 
         # Lưu câu trả lời của bot vào session
@@ -94,5 +129,14 @@ def delete_session(session_id):
     return jsonify({"status": "success", "message": "Đã xóa phiên trò chuyện."})
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    import logging
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
+    port = int(os.environ.get("PORT", 7860))
+    print(f"[*] Dang khoi dong va preload model...")
+    from src.embedding.embedder import get_model
+    get_model()  # Preload model vào RAM
+    print(f"[*] Server chatbot san sang tai http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=False)
+
 

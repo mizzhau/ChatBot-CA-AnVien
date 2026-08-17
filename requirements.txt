@@ -1,9 +1,10 @@
+streamlit
+flask
+gunicorn
 chromadb
 google-genai
 python-dotenv
 sentence-transformers
-flask
 python-docx
 pymupdf
-pytesseract
 Pillow

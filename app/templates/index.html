@@ -177,7 +177,13 @@
             gap: 8px;
         }
 
-        .reset-btn {
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn {
             background-color: rgba(255, 255, 255, 0.15);
             color: var(--white);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -193,9 +199,148 @@
             gap: 4px;
         }
 
-        .reset-btn:hover {
+        .action-btn:hover {
             background-color: rgba(255, 255, 255, 0.28);
             border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .action-btn.active-key {
+            background-color: #2e7d32;
+            border-color: #4caf50;
+        }
+
+        /* === MODAL API KEY === */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--white);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 460px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 18px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-body input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .modal-body input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .key-status-box {
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+        .key-status-box.default {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid #bbdefb;
+        }
+        .key-status-box.custom {
+            background: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #c8e6c9;
+        }
+
+        .modal-footer {
+            padding: 12px 18px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .modal-btn {
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+
+        .modal-btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+        .modal-btn-primary:hover {
+            background: #073863;
+        }
+
+        .modal-btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .modal-btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .modal-btn-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #fca5a5;
+        }
+        .modal-btn-danger:hover {
+            background: #fecaca;
         }
 
         .chat-messages {
@@ -355,9 +500,14 @@
                     <button class="sidebar-toggle" id="sidebar-toggle" title="Ẩn/hiện lịch sử chat">☰</button>
                     <span>HỖ TRỢ THỦ TỤC CA XÃ AN VIÊN</span>
                 </div>
-                <button class="reset-btn" id="reset-btn" title="Tạo cuộc trò chuyện mới">
-                    ➕ Chat mới
-                </button>
+                <div class="header-actions">
+                    <button class="action-btn" id="api-key-btn" title="Cấu hình Gemini API Key">
+                        🔑 <span id="api-key-btn-text">API Key</span>
+                    </button>
+                    <button class="action-btn" id="reset-btn" title="Tạo cuộc trò chuyện mới">
+                        ➕ Chat mới
+                    </button>
+                </div>
             </div>
             <div class="chat-messages" id="chat-messages">
                 <div class="message bot">
@@ -371,7 +521,78 @@
         </div>
     </div>
 
+    <!-- MODAL CẤU HÌNH API KEY -->
+    <div class="modal-overlay" id="api-key-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>🔑 Cấu hình Gemini API Key</span>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="key-status-display" class="key-status-box default">
+                    <strong>Trạng thái:</strong> Đang dùng <em>Key hệ thống (mặc định)</em>.<br>
+                    <small>• Giới hạn: Tối đa 5 câu hỏi/phút.</small>
+                </div>
+                <div>
+                    <label for="custom-api-key-input" style="font-weight: 500; font-size: 0.85rem; display: block; margin-bottom: 6px;">
+                        Nhập Gemini API Key cá nhân của anh/chị:
+                    </label>
+                    <input type="password" id="custom-api-key-input" placeholder="Dán mã API Key (AIzaSy...)" autocomplete="off">
+                </div>
+                <div style="font-size: 0.8rem; color: var(--light-text); line-height: 1.4;">
+                    💡 <em>Lấy API Key hoàn toàn miễn phí tại:</em><br>
+                    👉 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); font-weight: 500;">Google AI Studio (aistudio.google.com)</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-danger" id="clear-api-key-btn" style="display: none;">Xóa Key cá nhân</button>
+                <button class="modal-btn modal-btn-secondary" id="modal-cancel-btn">Đóng</button>
+                <button class="modal-btn modal-btn-primary" id="save-api-key-btn">Lưu Key</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ========================
+        // API KEY MANAGER (Client)
+        // ========================
+        function getUserApiKey() {
+            return localStorage.getItem('user_gemini_api_key') || '';
+        }
+
+        function setUserApiKey(key) {
+            if (key) {
+                localStorage.setItem('user_gemini_api_key', key.trim());
+            } else {
+                localStorage.removeItem('user_gemini_api_key');
+            }
+            updateApiKeyUI();
+        }
+
+        function updateApiKeyUI() {
+            const key = getUserApiKey();
+            const btn = document.getElementById('api-key-btn');
+            const btnText = document.getElementById('api-key-btn-text');
+            const statusBox = document.getElementById('key-status-display');
+            const clearBtn = document.getElementById('clear-api-key-btn');
+            const input = document.getElementById('custom-api-key-input');
+
+            if (key) {
+                btn.classList.add('active-key');
+                btnText.textContent = 'Key cá nhân ✓';
+                statusBox.className = 'key-status-box custom';
+                statusBox.innerHTML = `<strong>Trạng thái:</strong> Đang dùng <em>Key cá nhân</em>.<br><small>• Hạn mức: Theo quota tài khoản Google của anh/chị (không bị giới hạn 5 req/phút của hệ thống).</small>`;
+                clearBtn.style.display = 'inline-block';
+                input.value = key;
+            } else {
+                btn.classList.remove('active-key');
+                btnText.textContent = 'API Key';
+                statusBox.className = 'key-status-box default';
+                statusBox.innerHTML = `<strong>Trạng thái:</strong> Đang dùng <em>Key hệ thống (mặc định)</em>.<br><small>• Giới hạn: Tối đa 5 câu hỏi/phút.</small>`;
+                clearBtn.style.display = 'none';
+                input.value = '';
+            }
+        }
         // ========================
         // SESSION MANAGER (Client)
         // ========================
@@ -486,6 +707,7 @@
             sendBtn.disabled = true;
 
             const statusContainer = createStatusContainer();
+            const userApiKey = getUserApiKey();
 
             try {
                 const response = await fetch('/api/chat', {
@@ -493,7 +715,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: text,
-                        session_id: currentSessionId
+                        session_id: currentSessionId,
+                        api_key: userApiKey
                     })
                 });
 
@@ -513,7 +736,19 @@
                                 const data = JSON.parse(line.substring(6));
                                 if (data.is_final) {
                                     statusContainer.style.display = 'none';
-                                    appendMessage('bot', data.message, true);
+                                    const botMsgDiv = appendMessage('bot', data.message, true);
+
+                                    // Nếu bị rate limited hoặc server yêu cầu nhập key -> thêm nút gợi ý nhập key
+                                    if (data.show_api_key_prompt || data.status === 'rate_limited') {
+                                        const promptDiv = document.createElement('div');
+                                        promptDiv.style.marginTop = '10px';
+                                        promptDiv.innerHTML = `
+                                            <button class="modal-btn modal-btn-primary" style="font-size: 0.85rem; padding: 6px 12px;" onclick="openApiKeyModal()">
+                                                🔑 Nhập Gemini API Key riêng ngay
+                                            </button>
+                                        `;
+                                        botMsgDiv.appendChild(promptDiv);
+                                    }
                                 } else {
                                     appendStatus(statusContainer, data.message);
                                 }
@@ -535,10 +770,59 @@
         }
 
         // ========================
+        // MODAL HANDLERS
+        // ========================
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeyBtn = document.getElementById('api-key-btn');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const clearApiKeyBtn = document.getElementById('clear-api-key-btn');
+        const customApiKeyInput = document.getElementById('custom-api-key-input');
+
+        function openApiKeyModal() {
+            updateApiKeyUI();
+            apiKeyModal.classList.add('show');
+            customApiKeyInput.focus();
+        }
+
+        function closeApiKeyModal() {
+            apiKeyModal.classList.remove('show');
+        }
+
+        apiKeyBtn.addEventListener('click', openApiKeyModal);
+        modalCloseBtn.addEventListener('click', closeApiKeyModal);
+        modalCancelBtn.addEventListener('click', closeApiKeyModal);
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            const keyVal = customApiKeyInput.value.trim();
+            if (!keyVal) {
+                alert('Vui lòng nhập API Key hoặc bấm "Đóng" nếu muốn dùng key mặc định.');
+                return;
+            }
+            setUserApiKey(keyVal);
+            closeApiKeyModal();
+            alert('✅ Đã lưu Gemini API Key cá nhân thành công!');
+        });
+
+        clearApiKeyBtn.addEventListener('click', () => {
+            if (confirm('Anh/chị muốn xóa API Key cá nhân và chuyển về dùng Key mặc định của hệ thống?')) {
+                setUserApiKey('');
+                closeApiKeyModal();
+                alert('Đã chuyển về dùng Key mặc định của hệ thống.');
+            }
+        });
+
+        apiKeyModal.addEventListener('click', (e) => {
+            if (e.target === apiKeyModal) {
+                closeApiKeyModal();
+            }
+        });
+
+        // ========================
         // NEW CHAT (Archive session cũ, không xóa)
         // ========================
         async function handleNewChat() {
-            // Archive session cũ trên server (giữ lại dữ liệu)
             try {
                 await fetch('/api/chat/new', {
                     method: 'POST',
@@ -549,7 +833,6 @@
                 console.error("Lỗi khi lưu phiên cũ:", e);
             }
 
-            // Tạo session mới
             currentSessionId = createNewSession();
             showWelcomeMessage('Đã bắt đầu đoạn chat mới. Anh/chị cần hỗ trợ thủ tục gì hôm nay?');
             inputField.focus();
@@ -614,11 +897,9 @@
                 const data = await res.json();
                 const messages = data.messages || [];
 
-                // Chuyển sang session cũ
                 currentSessionId = sessionId;
                 localStorage.setItem('ca_an_vien_session_id', sessionId);
 
-                // Render lại tin nhắn
                 messagesContainer.innerHTML = '';
                 if (messages.length === 0) {
                     showWelcomeMessage('Xin chào anh/chị. Tôi là hệ thống Trợ lý Pháp lý của Công an xã An Viễn. Anh/chị cần hỗ trợ thủ tục gì hôm nay?');
@@ -644,7 +925,6 @@
             try {
                 await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
 
-                // Nếu đang xóa session hiện tại thì tạo session mới
                 if (sessionId === currentSessionId) {
                     currentSessionId = createNewSession();
                     showWelcomeMessage('Đã xóa phiên. Anh/chị cần hỗ trợ thủ tục gì hôm nay?');
@@ -674,7 +954,8 @@
             }
         });
 
-        // Load danh sách sessions khi mở trang
+        // Khởi tạo UI API Key và load danh sách sessions khi mở trang
+        updateApiKeyUI();
         loadSessionList();
     </script>
 </body>

@@ -1,8 +1,11 @@
 import sys
 import json
+import logging
 from pathlib import Path
 import chromadb
 from src.embedding.embedder import embed_texts
+
+logger = logging.getLogger(__name__)
 
 DB_DIR = Path(__file__).parent.parent.parent / "data" / "vectorstore"
 SOURCE_REGISTRY_PATH = Path(__file__).parent.parent.parent / "data" / "chunks" / "id_source.json"
@@ -106,16 +109,35 @@ def answer(query: str) -> str:
     if top is not None:
         meta = top["meta"]
         out = []
+
+        # 1. Câu trả lời chính — sạch, không kèm nhãn kỹ thuật
         out.append(meta["canonical_answer"])
+
+        # 2. Gợi ý hỏi lại — diễn đạt tự nhiên
         if meta.get("clarifying_question_if_missing"):
-            out.append(f"\n(Nếu thiếu thông tin, hỏi lại: {meta['clarifying_question_if_missing']})")
+            out.append(f"\nGợi ý câu hỏi làm rõ: {meta['clarifying_question_if_missing']}")
+
+        # 3. Hướng dẫn chuyển tiếp — diễn đạt tự nhiên
+        if meta.get("handoff_or_emergency_rule"):
+            out.append(f"\nLưu ý chuyển tiếp: {meta['handoff_or_emergency_rule']}")
+
+        # 4. Căn cứ pháp lý
         if meta.get("legal_basis"):
-            out.append(f"\nCăn cứ: {meta['legal_basis']}")
+            out.append(f"\nCăn cứ pháp lý: {meta['legal_basis']}")
+
+        # 5. Guardrail (quy tắc an toàn cho LLM tuân thủ)
+        if meta.get("guardrail"):
+            out.append(f"\nQuy tắc an toàn: {meta['guardrail']}")
+
+        # 6. Link website
         website_links = get_website_links(meta.get("source_ids", ""))
         if website_links:
             out.append(website_links)
-        out.append(f"\n[matched: {meta['chunk_id']} | sim={top['sim']:.3f} | "
-                    f"qua biến thể: \"{top['matched_variant']}\"]")
+
+        # 7. Debug info — CHỈ log, KHÔNG đưa vào context cho LLM
+        logger.info(f"[KB-MATCH] chunk={meta['chunk_id']} | sim={top['sim']:.3f} | "
+                    f"variant=\"{top['matched_variant']}\"")
+
         result = "\n".join(out)
         if meta.get("module", "").startswith(("E", "F")):
             result += EMERGENCY_NOTE

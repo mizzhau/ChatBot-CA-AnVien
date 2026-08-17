@@ -19,3 +19,7 @@ def embed_texts(texts: List[str]) -> List[List[float]]:
         normalize_embeddings=True,
     )
     return vectors.tolist()
+
+
+
+
