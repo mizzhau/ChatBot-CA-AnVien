@@ -99,7 +99,7 @@ if "llm_history" not in st.session_state:
 # ========================
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Emblem_of_Vietnam.svg/200px-Emblem_of_Vietnam.svg.png", width=70)
-    st.markdown("### 🛡️ CA XÃ AN VIÊN")
+    st.markdown("### CÔNG AN XÃ AN VIÊN")
     st.caption("Trực ban 24/7: **02513.538.187**  \nĐịa chỉ: Ấp Phát Đạt, xã An Viễn")
     
     st.divider()
@@ -119,7 +119,7 @@ with st.sidebar:
 
     st.markdown("""
     <small>
-    💡 <i>Lấy API Key miễn phí tại:</i><br>
+    💡 <i>Lấy API Key tại:</i><br>
     👉 <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>
     </small>
     """, unsafe_allow_html=True)
