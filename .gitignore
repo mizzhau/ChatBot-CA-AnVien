@@ -58,8 +58,10 @@ htmlcov/
 docs/
 new_docs/
 
-# Data directory rule: Exclude all inside data/ EXCEPT data/vectorstore
+# Data directory rule: Keep chunks and vectorstore
 data/*
+!data/chunks/
+!data/chunks/**
 !data/vectorstore/
 !data/vectorstore/**
 

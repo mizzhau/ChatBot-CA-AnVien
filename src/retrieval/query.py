@@ -11,8 +11,13 @@ DB_DIR = Path(__file__).parent.parent.parent / "data" / "vectorstore"
 SOURCE_REGISTRY_PATH = Path(__file__).parent.parent.parent / "data" / "chunks" / "id_source.json"
 
 def _load_source_registry():
-    with open(SOURCE_REGISTRY_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        if SOURCE_REGISTRY_PATH.exists():
+            with open(SOURCE_REGISTRY_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.warning(f"Không thể đọc source registry từ {SOURCE_REGISTRY_PATH}: {e}")
+    return {}
 
 _source_registry = _load_source_registry()
 
